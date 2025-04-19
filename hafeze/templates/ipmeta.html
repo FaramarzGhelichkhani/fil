@@ -1,0 +1,28 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FIL</title>
+    <link href="{% static 'ui.css' %}" rel="stylesheet">
+</head>
+<body>
+<form action="{% url 'hafeze:ui' %}" method="post">
+    {% csrf_token %}
+    {{ form.ips }}
+    <span>
+        {{ form.produce.label_tag }}
+        {{ form.produce }}
+        {{ form.days_ago }}
+        {{ form.download.label_tag }}
+        {{ form.download }}
+        <input class="outer" type="submit" value="Submit">
+    </span>
+</form>
+<div>
+    <pre>
+        {{result}}
+    </pre>
+</div>
+</body>
+</html>

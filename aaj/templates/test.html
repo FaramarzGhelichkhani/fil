@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FIL</title>
+    <link href="../static/ui.css" rel="stylesheet">
+</head>
+<body>
+<form action="/fil/script/ui" method="post">
+    <input name="csrfmiddlewaretoken" type="hidden"
+           value="w7rbOy77phJKs4tZRW7CFQjmjuamPUvfvbcdOMpidrf0kN0ZaJoHvQssGc4N3DYY">
+    <textarea cols="40" id="id_signature" maxlength="10000" name="signature" placeholder="Type your code here ..."
+              required
+              rows="10">
+</textarea>
+    <span>
+        <input id="id_unlabeled_limit" name="unlabeled_limit" placeholder="search size" required type="number">
+        <select id="id_date" name="date">
+  <option value="2022-12-20">2022-12-20</option>
+
+  <option value="2022-12-21">2022-12-21</option>
+
+  <option value="2022-12-22">2022-12-22</option>
+
+  <option value="2022-12-23">2022-12-23</option>
+
+  <option value="2022-12-24">2022-12-24</option>
+
+  <option value="2022-12-25">2022-12-25</option>
+
+</select>
+        <input class="gonde inner" id="id_input_ips" maxlength="1000" name="input_ips"
+               placeholder="Write comma separated list of IPs." type="text">
+        <label for="id_download">Download the results?</label>
+        <input id="id_download" name="download" type="checkbox">
+        <input class="outer" type="submit" value="Submit">
+    </span>
+</form>
+<div>
+    <pre>
+
+    </pre>
+</div>
+</body>
+</html>

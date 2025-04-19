@@ -1,0 +1,34 @@
+version: '3.7'
+services:
+  hub:
+    user: root
+    image: fil_hub:latest
+    container_name: hub
+    restart: always
+
+    #    ports:
+    #      - 8000:8000
+    volumes:
+      - .:/usr/src/app
+      - ../..:/usr/src/app/fil
+        #      - /opt/fil-docker/.env.json:/usr/src/app/fil/.env.json
+        #      - /opt/fil-docker/.env.prod:/usr/src/app/.env.prod
+      - /var/fil/data:/var/fil/data
+      - /var/hub/home:/home
+        
+        #      - /etc/timezone:/etc/timezone:ro
+        #      - /etc/localtime:/etc/localtime:ro
+
+        #    env_file:
+        #      - /opt/fil-docker/.env.prod
+    command: bash -c "/usr/src/app/entrypoint.prod.sh && jupyterhub"
+    networks:
+      - network_webserver
+    ports: 
+      - "8000:8000"
+
+ 
+networks:
+  network_webserver:
+    external: true
+

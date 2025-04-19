@@ -1,0 +1,117 @@
+version: '3.7'
+services:
+  webserver:
+    build: ./nginx
+    container_name: webserver
+    restart: always
+    volumes:
+      - ./nginx/location.d:/etc/nginx/conf.d/location.d
+      - fil_static_volume:/home/app/staticfiles
+      - /var/nginx/log:/var/log/nginx
+    ports:
+      #      - 80:80       
+      - 443:443
+    networks:
+      - network_comman_service
+      - network_webserver
+
+  mlflow:
+    container_name: mlflow
+    image: ghcr.io/mlflow/mlflow:v2.9.2
+    command: mlflow server --host 0.0.0.0
+    restart: always
+    volumes:
+      - /var/mlflow/mlartifacts:/mlartifacts
+      - /var/mlflow/mlruns:/mlruns
+    networks:
+      - network_webserver
+        #    ports:
+        #      - "5000:5000"        
+
+
+
+  kafka:
+    image: &kafka-image bitnami/kafka:latest
+    user: root
+    container_name: kafka
+    ports:
+     - "9094:9094"
+     - "9092:9092"
+    restart: always
+    volumes:
+      - /var/kafka:/bitnami/kafka
+    environment:
+      #       - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      #       - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:29092
+      #       - ALLOW_PLAINTEXT_LISTENER=yes            
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+        #- KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+        #      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092, EXTERNAL://${HOST_IP}:9094
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+        #- KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+    healthcheck:
+      test: ["CMD", "kafka-topics.sh", "--bootstrap-server=kafka:9092", "--list"]
+      start_period: 15s
+      interval: 10s
+    networks:
+      - network_comman_service
+
+        #  init-kafka:
+        #    image: *kafka-image
+        #    working_dir: /opt/bitnami/kafka/bin
+        #    entrypoint: /bin/bash
+        #    depends_on:
+        #      kafka:
+        #        condition: service_healthy
+        #    command: |
+        #      kafka-topics.sh --create --if-not-exists --topic foo --replication-factor=1 --partitions=1 --bootstrap-server kafka:9092
+        #      kafka-topics.sh --bootstrap-server localhost:9092 --create --if-not-exists --topic input_topic --replication-factor 1 --partitions 1
+        #      kafka-topics.sh --create --if-not-exists --topic foo --replication-factor=1 --partitions=3 --bootstrap-server kafka:29092       
+        #    networks:
+        #      - network_comman_service 
+    
+
+        #  zookeeper:  
+        #    container_name: zookeeper
+        #    image: bitnami/zookeeper
+        #    restart: always
+        #    ports:
+        #      - 2181:2181
+        #    environment:
+        #      - ZOOKEEPER_CLIENT_PORT=2181
+        #      - ALLOW_ANONYMOUS_LOGIN=yes
+        #    volumes: 
+        #      - ./config/zookeeper/zookeeper.properties:/kafka/config/zookeeper.properties
+        #      - ./kafka/kafka_data/zookeeper_data:/var/lib/zookeeper/data
+        #      - ./kafka/data/zookeeper_log:/var/lib/zookeeper/log
+        #    networks:
+        #      - network_comman_service
+  
+
+        #  zookeeper:
+        #    image: bitnami/zookeeper:latest
+        #    container_name: zookeeper
+        #    ports:
+        #    - "12181:2181"
+        #    environment:
+        #    ALLOW_ANONYMOUS_LOGIN: "yes"
+        #    networks:
+        #    - network_comman_service
+
+networks:
+  network_webserver:
+          external: true
+  network_comman_service:
+          external: true
+
+
+volumes:
+  fil_static_volume:
+    external: true
+

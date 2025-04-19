@@ -1,0 +1,173 @@
+# image: docker:24.0.5
+stages:
+  - test
+  - build_deploy
+  - deploy
+
+variables:
+    TZ: "Asia/Tehran"
+    GIT_SSL_NO_VERIFY: "true" 
+    VIRTUAL_ENV: "/usr/src/app/venv"
+    PATH: "/usr/src/app/venv/bin:/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"
+    BUILD_DEPLOY_MASTER: "False"
+    DIR: "/opt"
+
+# test ##############################
+.pre_test:
+  image: python:3.8-slim-buster 
+  before_script:    
+    - source /usr/src/app/venv/bin/activate
+    - cp /usr/src/app/.env.json .
+    - cp /usr/src/app/.env.prod .
+  script:
+    - export https_proxy='http://172.30.112.9:6060' && export http_proxy='http://172.30.112.9:6060' #set proxy
+    - python -m pip install --upgrade pip
+    - python -m pip install -r base/requirements.txt
+    - unset https_proxy && unset http_proxy
+
+unit-tests:
+  stage: test
+  extends: .pre_test
+  script:
+    - python3 manage.py test
+
+# remember-command:
+#   stage: test
+#   extends: .pre_test
+#   script:
+#     - python3 manage.py remember 1 1
+
+# train-command:
+#   stage: test
+#   extends: .pre_test
+#   script:
+#     - python manage.py train
+
+# fetch-command:
+#   stage: test
+#   extends: .pre_test
+#   script:
+#     - python manage.py fetch 1 1
+
+# attack-command:
+#   stage: test
+#   extends: .pre_test
+#   script:
+#     - python manage.py attack 1 1
+#   needs:
+#     - job: remember-command
+
+
+.pre_deploy:
+  image: docker:24.0.5
+  before_script:
+    - 'command mkdir -p ~/.ssh/ && cp /usr/src/app/Untracked/ssh/* ~/.ssh/ && ssh-keyscan -H 172.30.222.64 >> ~/.ssh/known_hosts'
+    - chmod -R 400 ~/.ssh
+
+deploy-fil-development:
+  stage: deploy
+  extends: .pre_deploy
+  script:
+    - rm -rf .git
+    - scp -o StrictHostKeyChecking=no -r $PWD root@fil-development:$DIR
+    - ssh -tt root@fil-development cp -n /var/fil/env_file/.env.* $DIR/fil
+    - ssh -tt root@fil-development cp -rn /var/fil/env_file/venv $DIR/fil/docker/hub/
+    - ssh -tt root@fil-development chown -R filuser:filuser $DIR/fil    
+    - ssh -tt root@fil-development chmod -R 755 $DIR/fil
+    - ssh -tt root@fil-development "find $DIR/fil -type d -iname __pycache__ -exec chown -R root:root {} \;"
+    - ssh -tt root@fil-development "find $DIR/fil -type d -iname staticfiles -exec chown -R root:root {} \;"
+    - ssh -tt fil-development chmod 640 $DIR/fil/docker/hub/jupyterhub_cookie_secret
+    - ssh -tt fil-development $DIR/fil/scripts/run_fil.sh fil-development $DIR
+  except:
+    changes:
+      - docker/base/requirements.txt
+      - docker/base/Dockerfile
+  only:
+    - dev 
+
+deploy-fil-production:
+  stage: deploy
+  extends: .pre_deploy
+  script:
+    - rm -rf .git
+    - rm -rf docker/hub
+    - scp -o StrictHostKeyChecking=no -r $PWD fil-production:$DIR
+    - ssh -tt fil-production cp -n /var/fil/env_file/.env.* $DIR/fil
+    - ssh -tt fil-production rm  $DIR/fil/docker/common_service/nginx/location.d/nginx_hub.locations
+    - ssh -tt fil-production rm  $DIR/fil/docker/common_service/nginx/location.d/nginx_mlflow.locations       
+    - ssh -tt fil-production $DIR/fil/scripts/run_fil.sh fil-production $DIR     
+  except:
+    changes:    
+      - docker/base/requirements.txt
+      - docker/base/Dockerfile
+  only:
+    - master
+  # needs:
+  #   - job: deploy-fil-development  
+
+build_deploy-fil-production:
+  stage: build_deploy
+  extends: 
+    - .pre_deploy
+  environment:
+    name: production    
+  script:
+    - rm -rf .git
+    - rm -rf docker/hub
+    # - rm -rf venv
+    - scp -o StrictHostKeyChecking=no -r $PWD fil-production:$DIR        
+    - ssh -tt fil-production scp -r  filuser@fil-development:$DIR/fil/docker/python3.8-requirements.tar $DIR/fil/docker         
+    - ssh -tt fil-production cp -n /var/fil/env_file/.env.* $DIR/fil
+    - ssh -tt fil-production docker load -i $DIR/fil/docker/python3.8-requirements.tar
+    - ssh -tt fil-production rm  $DIR/fil/docker/common_service/nginx/location.d/nginx_hub.locations
+    - ssh -tt fil-production rm  $DIR/fil/docker/common_service/nginx/location.d/nginx_mlflow.locations    
+    - ssh -tt fil-production $DIR/fil/scripts/run_fil.sh fil-production $DIR 
+  only:
+    refs:
+      - master
+    changes:
+      - docker/base/requirements.txt
+      - docker/base/requirements.apt
+      - docker/base/Dockerfile    
+
+build_deploy-development:
+  stage: build_deploy
+  extends: 
+    - .pre_deploy
+  script:
+    - source /usr/src/app/venv/bin/activate
+    - cp -r /usr/src/app/venv .
+    - cp -r /usr/src/app/Untracked/pip.conf ./docker/base/
+    - cp -r /usr/src/app/Untracked/sources.list ./docker/base/
+
+    - docker build -f docker/base/Dockerfile -t python3.8-requirements .
+    #    - docker save python3.8-requirements -o $DIR/docker/python3.8-requirements.tar
+
+    # for space fil-test -----------------------------------------------------------------
+    - docker save python3.8-requirements -o /var/docker/python3.8-requirements.tar
+    # ------------------------------------------------------------------------------------
+    
+    - rm -rf .git
+    - rm -rf venv            
+    - scp -o StrictHostKeyChecking=no -r $PWD root@fil-development:$DIR
+
+    # for space fil-test ------------------------------------------------------------------
+    - scp -r /var/docker/python3.8-requirements.tar root@fil-development:$DIR/fil/docker/
+    # -------------------------------------------------------------------------------------
+
+    - ssh -tt root@fil-development cp -n /var/fil/env_file/.env.* $DIR/fil
+    - ssh -tt root@fil-development cp -rn /var/fil/env_file/venv $DIR/fil/docker/hub/
+    - ssh -tt root@fil-development chown -R filuser:filuser $DIR/fil    
+    - ssh -tt root@fil-development chmod -R 755 $DIR/fil
+    - ssh -tt root@fil-development "find $DIR/fil -type d -iname __pycache__ -exec chown -R root:root {} \;"
+    - ssh -tt root@fil-development "find $DIR/fil -type d -iname staticfiles -exec chown -R root:root {} \;"    
+    - ssh -tt fil-development chmod 640 $DIR/fil/docker/hub/jupyterhub_cookie_secret
+    - ssh -tt fil-development docker load -i $DIR/fil/docker/python3.8-requirements.tar     
+    - ssh -tt fil-development $DIR/fil/scripts/run_fil.sh fil-development $DIR
+  only:
+    refs:
+      - dev
+    changes:    
+      - docker/base/requirements.txt
+      - docker/base/requirements.apt
+      - docker/base/Dockerfile

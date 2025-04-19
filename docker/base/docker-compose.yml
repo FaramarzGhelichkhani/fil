@@ -1,0 +1,35 @@
+version: '3.7'
+services:
+  fil:
+    image: python3.8-requirements
+    container_name: fil
+    command: bash -c "/usr/src/app/scripts/entrypoint.prod.sh && python /usr/src/app/manage.py runserver 0.0.0.0:8000"
+    restart: always
+    volumes:
+      - fil_static_volume:/usr/src/app/staticfiles
+      - /var/fil/data:/var/fil/data
+      - /var/fil/log:/var/fil/log
+      - ../..:/usr/src/app
+        #      - ../.env.json:/usr/src/app/.env.json
+        #      - ../.env.prod:/usr/src/app/.env.prod
+        #    env_file:
+        #      - ../.env.prod
+        #    ports:
+        #      - 8000:8000
+    environment:
+      - TZ=Asia/Tehran
+      - http_proxy=
+      - https_proxy=
+    networks:
+      - network_webserver
+      - network_comman_service
+
+volumes:
+  fil_static_volume:
+    external: true
+
+networks:
+  network_webserver:
+    external: true
+  network_comman_service:
+    external: true

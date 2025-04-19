@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FIL</title>
+    <link href="../static/ui.css" rel="stylesheet">
+</head>
+<body>
+<form action="/fil/get/ui" method="post">
+    <input name="csrfmiddlewaretoken" type="hidden"
+           value="FLPi6Pqh0VFkFzmn8rQbdHY6exjki5cGEPAk63IsO5bAxiTnre7g3H7cBfdLwOFp">
+    <textarea cols="40" id="id_ips" maxlength="10000" name="ips"
+              placeholder="Write comma separated list of IPs with single quote ..." required rows="10">
+</textarea>
+    <span>
+
+        <label for="id_produce">Produce IPMeta?</label>
+        <input id="id_produce" name="produce" type="checkbox">
+        <input class="inner" id="id_gte" name="gte" placeholder="gte" type="number">
+        <input class="inner" id="id_lte" name="lte" placeholder="lte" type="number">
+        <select id="id_date" name="date">
+  <option value="2022-12-10">2022-12-10</option>
+
+  <option value="2022-12-11">2022-12-11</option>
+
+  <option value="2022-12-12">2022-12-12</option>
+
+  <option value="2022-12-13">2022-12-13</option>
+
+  <option value="2022-12-14">2022-12-14</option>
+
+  <option value="2022-12-15">2022-12-15</option>
+
+  <option value="2022-12-16">2022-12-16</option>
+
+  <option value="2022-12-17">2022-12-17</option>
+
+  <option value="2022-12-18">2022-12-18</option>
+
+  <option value="2022-12-19">2022-12-19</option>
+
+  <option value="2022-12-20">2022-12-20</option>
+
+  <option value="2022-12-21">2022-12-21</option>
+
+  <option value="2022-12-22">2022-12-22</option>
+
+  <option value="2022-12-23">2022-12-23</option>
+
+  <option value="2022-12-24">2022-12-24</option>
+
+</select>
+
+        <label for="id_download">Download the results?</label>
+        <input id="id_download" name="download" type="checkbox">
+        <input class="outer" type="submit" value="Submit">
+    </span>
+</form>
+<div>
+    <pre>
+
+    </pre>
+</div>
+</body>
+</html>

@@ -1,0 +1,95 @@
+body {
+    margin: 0;
+    padding: 2.5%;
+    background-color: aliceblue;
+    display: flex;
+    flex-direction: column;
+    height: 95%;
+}
+
+html {
+    padding: 0;
+    margin: 0;
+    height: 100%;
+}
+
+div {
+    display: block;
+    background-color: white;
+    margin-top: 2.5%;
+    padding: 2.5%;
+    flex-grow: 1;
+    overflow: auto;
+    height: auto;
+    font-family: jetbrains;
+}
+
+
+input[name="input_ips"] {
+    flex-grow: 10;
+}
+
+form {
+    flex-grow: 0;
+    display: block;
+}
+
+textarea {
+    display: block;
+    width: 98%;
+    padding: 1%;
+    resize: none;
+    font-family: jetbrains;
+}
+
+span {
+    align-items: center;
+    display: flex;
+    flex-direction: row;
+
+}
+
+select, input {
+    margin: 0;
+    padding: 0.5%;
+    margin-top: 1%;
+    flex-grow: 0;
+    height: fit-content;
+    display: inline;
+    font-family: jetbrains;
+}
+
+label {
+    margin: 0;
+    padding: 1%;
+    margin-top: 1%;
+    white-space: nowrap;
+    font-family: jetbrains;
+}
+
+.inner {
+    margin-left: 1%;
+    margin-right: 1%;
+}
+
+.outer {
+    margin-left: 1%;
+}
+
+label {
+    white-space: nowrap;
+}
+
+input[type="submit"] {
+    flex-grow: 1;
+}
+
+@font-face {
+    font-family: 'PublicSans';
+    src: url("PublicSans-Medium.ttf");
+}
+
+@font-face {
+    font-family: 'jetbrains';
+    src: url("JetBrainsMono-Regular.ttf");
+}

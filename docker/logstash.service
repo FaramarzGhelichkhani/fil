@@ -1,0 +1,14 @@
+[Unit]
+Description=logstash service
+After=network.target
+StartLimitIntervalSec=0
+[Service]
+Type=simple
+Restart=on-failure
+RestartSec=0
+User=root
+ExecStart=/usr/share/logstash/bin/logstash -f /home/user/logstash.conf -b 1000 -w 5
+
+[Install]
+WantedBy=multi-user.target
+

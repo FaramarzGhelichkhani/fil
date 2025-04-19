@@ -1,0 +1,28 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FIL</title>
+    <link href="{% static 'ui.css' %}" rel="stylesheet">
+</head>
+<body>
+<form action="{% url 'aaj:ui' %}" method="post">
+    {% csrf_token %}
+    {{ form.signature }}
+    <span>
+        {{ form.unlabeled_limit }}
+        {{ form.input_ips }}
+        {{ form.download.label_tag }}
+        {{ form.download }}
+        <input class="outer" type="submit" value="Submit">
+    </span>
+</form>
+<div>
+    <pre>
+        {{result}}
+        {{errors}}
+    </pre>
+</div>
+</body>
+</html>

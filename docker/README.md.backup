@@ -1,0 +1,77 @@
+
+# fil-docker initial
+```
+git clone https://ganj-ipe.yaftar.ir/moeini_e/fil-docker
+cd fil-docker
+git clone https://ganj-ipe.yaftar.ir/sadeghian_a/fil
+```
+create .env.prod
+
+create .env.json
+```
+docker-compose build
+docker-compose up -d
+docker-compose ps
+```
+
+for ci deploy
+```
+chown root deploy.sh
+```
+# logs
+api logs
+```
+docker-compose logs fil
+```
+internal logs
+```
+tail -f app/logging/log.txt
+```
+
+# create ci docker
+when config files changes we have to build ci image agian
+
+in ci machin run
+```
+docker build -f ci/Dockerfile -t fil-runner .
+```
+
+# create base image
+this image has fil requirements
+
+in test machin
+
+pull fil updates
+```
+cd fil
+git pull
+cd ..
+```
+then
+```
+./base/script.sh
+```
+or
+```
+docker build -f base/Dockerfile -t python3.8-requirements .
+docker save python3.8-requirements -o python3.8-requirements.tar
+```
+and then change docker image in deploy machins
+
+# create deploy docker
+in ci machin we use this image for deploy fil project
+
+it doesn't need refresh
+```
+docker build -t fil-deployer deploy
+```
+
+# logstash
+in deploy server
+```
+cp logstash.conf /home/user/logstash.conf
+```
+then create service for logstash
+
+you can use logstash.service file
+
